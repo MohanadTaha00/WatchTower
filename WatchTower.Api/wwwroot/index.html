@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WatchTower</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/dashboard"><span class="brand-dot"></span>WatchTower</a>
+    <nav id="main-nav" class="main-nav" hidden>
+      <a class="nav-link" href="#/dashboard" data-view="dashboard">Dashboard</a>
+      <a class="nav-link" href="#/incidents" data-view="incidents">
+        Incidents <span id="nav-incident-badge" class="nav-badge" hidden>0</span>
+      </a>
+      <a class="btn btn-primary nav-add" href="#/add" data-view="add">+ Add monitor</a>
+    </nav>
+    <div id="user-area" class="user-area" hidden>
+      <button id="profile-btn" class="profile-btn" type="button" data-view="account"
+              aria-haspopup="menu" aria-expanded="false" aria-controls="profile-menu">
+        <span class="avatar" data-avatar aria-hidden="true"></span>
+        <span id="user-email" class="profile-email"></span>
+        <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div id="profile-menu" class="profile-menu" role="menu" hidden>
+        <div class="profile-menu-header">
+          <span class="avatar avatar-lg" data-avatar aria-hidden="true"></span>
+          <div class="profile-menu-who">
+            <strong id="profile-menu-email"></strong>
+            <span id="profile-menu-security" class="small"></span>
+          </div>
+        </div>
+        <a class="profile-menu-item" href="#/account" role="menuitem">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          <span><strong>Account manager</strong><small>Password and two-factor authentication</small></span>
+        </a>
+        <button id="logout-btn" class="profile-menu-item" type="button" role="menuitem">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/></svg>
+          <span><strong>Log out</strong></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="global-message" class="message" hidden></div>
+
+    <!-- Auth -->
+    <section id="auth-view" class="auth-view" hidden>
+      <div class="card auth-card">
+        <h1 id="auth-title">Uptime monitoring</h1>
+        <p id="auth-intro" class="muted">Add your websites, servers and APIs, and WatchTower checks whether they are online.</p>
+
+        <div id="auth-tabs" class="tabs" role="tablist">
+          <button class="tab active" type="button" data-mode="login">Log in</button>
+          <button class="tab" type="button" data-mode="register">Register</button>
+        </div>
+
+        <form id="auth-form" novalidate>
+          <label>Email
+            <input type="email" name="email" required autocomplete="email">
+          </label>
+          <label>Password
+            <input type="password" name="password" required minlength="8" autocomplete="current-password">
+          </label>
+          <p id="auth-hint" class="muted small" hidden>Use at least 8 characters.</p>
+          <div id="auth-message" class="message" hidden></div>
+          <button id="auth-submit" type="submit" class="btn btn-primary btn-block">Log in</button>
+          <p id="forgot-row" class="auth-links">
+            <button id="forgot-link" class="link-button" type="button">Forgot password?</button>
+          </p>
+        </form>
+
+        <form id="forgot-form" class="auth-subform" novalidate hidden>
+          <label>Email
+            <input type="email" name="email" required autocomplete="email">
+          </label>
+          <div id="forgot-message" class="message" hidden></div>
+          <button id="forgot-submit" type="submit" class="btn btn-primary btn-block">Reset password</button>
+          <p class="auth-links">
+            <button class="link-button" type="button" data-back-to-login>Back to log in</button>
+          </p>
+        </form>
+
+        <form id="twofactor-form" class="auth-subform" novalidate hidden>
+          <label>Code
+            <input name="code" class="code-input" required autocomplete="one-time-code" maxlength="11" spellcheck="false">
+          </label>
+          <p class="muted small">Lost your phone or can't get the email? Enter one of your recovery codes instead.</p>
+          <div id="twofactor-message" class="message" hidden></div>
+          <button id="twofactor-submit" type="submit" class="btn btn-primary btn-block">Verify</button>
+          <p class="auth-links">
+            <button id="twofactor-resend" class="link-button" type="button" hidden>Send a new code</button>
+            <button class="link-button" type="button" data-back-to-login>Back to log in</button>
+          </p>
+        </form>
+
+        <form id="reset-form" class="auth-subform" novalidate hidden>
+          <label>New password
+            <input type="password" name="newPassword" required minlength="8" autocomplete="new-password">
+          </label>
+          <label>Confirm new password
+            <input type="password" name="confirmPassword" required minlength="8" autocomplete="new-password">
+          </label>
+          <div id="reset-message" class="message" hidden></div>
+          <button id="reset-submit" type="submit" class="btn btn-primary btn-block">Set new password</button>
+          <p class="auth-links">
+            <button class="link-button" type="button" data-back-to-login>Back to log in</button>
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <!-- Dashboard: monitored endpoints -->
+    <section id="dashboard-view" class="view" hidden>
+      <div class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="muted">Everything you are monitoring, refreshed every 10 seconds.</p>
+        </div>
+        <span id="last-refresh" class="muted small"></span>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span class="stat-label">Monitors</span><span id="stat-total" class="stat-value">0</span></div>
+        <div class="stat stat-up"><span class="stat-label">Up</span><span id="stat-up" class="stat-value">0</span></div>
+        <div class="stat stat-down"><span class="stat-label">Down</span><span id="stat-down" class="stat-value">0</span></div>
+        <a class="stat stat-incidents stat-link" href="#/incidents"><span class="stat-label">Open incidents</span><span id="stat-incidents" class="stat-value">0</span></a>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Monitored endpoints</h2>
+        </div>
+        <div id="monitors-empty" class="empty">
+          <p>No monitors yet.</p>
+          <a class="btn btn-primary" href="#/add">+ Add your first monitor</a>
+        </div>
+        <div class="table-wrap">
+          <table id="monitors-table" class="table" hidden>
+            <thead>
+              <tr><th>Monitor</th><th>Type</th><th>Status</th><th>Response</th><th>Last check</th><th>Every</th><th></th></tr>
+            </thead>
+            <tbody id="monitors-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="checks-card" class="card" hidden>
+        <div class="card-header">
+          <h2 id="checks-title">Monitor details</h2>
+          <div class="card-header-actions">
+            <div id="stats-range" class="range-picker" role="group" aria-label="Time range">
+              <button type="button" data-range="24h" class="active">24 hours</button>
+              <button type="button" data-range="7d">7 days</button>
+              <button type="button" data-range="30d">30 days</button>
+            </div>
+            <button id="checks-close" class="btn btn-ghost btn-sm" type="button">Close</button>
+          </div>
+        </div>
+        <div id="stats-tiles" class="tiles"></div>
+        <div class="chart-header">
+          <h3>Response time</h3>
+          <span class="chart-legend small muted">
+            <span><i class="legend-line"></i>Average of successful checks</span>
+            <span><i class="legend-fail"></i>Failed checks</span>
+          </span>
+        </div>
+        <div id="stats-chart" class="chart"></div>
+
+        <h3 class="section-title">Recent checks</h3>
+        <div id="checks-summary" class="muted small"></div>
+        <div id="checks-bar" class="uptime-bar"></div>
+        <div id="checks-empty" class="empty" hidden>No checks yet. The first check runs within a few seconds.</div>
+        <div class="table-wrap">
+          <table id="checks-table" class="table">
+            <thead>
+              <tr><th>Time</th><th>Result</th><th>Status code</th><th>Response</th><th>Error</th></tr>
+            </thead>
+            <tbody id="checks-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Add / edit monitor -->
+    <section id="add-view" class="view" hidden>
+      <div class="page-header">
+        <div>
+          <h1 id="form-title">Add monitor</h1>
+          <p class="muted">Pick what you want to check, then fill in the details.</p>
+        </div>
+      </div>
+
+      <div class="add-layout">
+        <aside class="type-sidebar" aria-label="Monitor type">
+          <button class="type-option" type="button" data-type="Website">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>
+            <span><strong>Website URL</strong><small>Check that a web page loads with the expected HTTP status.</small></span>
+          </button>
+          <button class="type-option" type="button" data-type="IpAddress">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>
+            <span><strong>IP address</strong><small>Ping a server, or check that a TCP port accepts connections.</small></span>
+          </button>
+          <button class="type-option" type="button" data-type="Api">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5c-2 0-3 1-3 3v2c0 1-1 2-2 2 1 0 2 1 2 2v2c0 2 1 3 3 3M16 5c2 0 3 1 3 3v2c0 1 1 2 2 2-1 0-2 1-2 2v2c0 2-1 3-3 3"/></svg>
+            <span><strong>API endpoint</strong><small>Send a custom request with headers and body, and verify the response.</small></span>
+          </button>
+        </aside>
+
+        <div class="card form-card">
+          <div class="type-intro">
+            <h2 id="type-heading">Website URL</h2>
+            <p id="type-description" class="muted small"></p>
+          </div>
+
+          <form id="monitor-form" novalidate>
+            <label>Name
+              <input name="name" required maxlength="200" placeholder="Company website">
+            </label>
+
+            <!-- Website -->
+            <fieldset class="type-fields" data-type="Website">
+              <label>URL
+                <input name="websiteUrl" type="url" maxlength="2048" placeholder="https://example.com">
+              </label>
+              <label>Expected HTTP status
+                <input name="websiteExpectedStatus" type="number" min="100" max="599" value="200">
+              </label>
+            </fieldset>
+
+            <!-- IP address -->
+            <fieldset class="type-fields" data-type="IpAddress">
+              <label>IP address
+                <input name="ipAddress" maxlength="45" placeholder="203.0.113.10 or 2001:db8::1" autocomplete="off" spellcheck="false">
+              </label>
+              <div class="field-group">
+                <span class="field-label">Check method</span>
+                <div class="segmented">
+                  <label><input type="radio" name="ipMode" value="ping" checked> Ping (ICMP)</label>
+                  <label><input type="radio" name="ipMode" value="tcp"> TCP port</label>
+                </div>
+              </div>
+              <label id="port-field" hidden>Port
+                <input name="port" type="number" min="1" max="65535" placeholder="443">
+              </label>
+              <p id="ip-hint" class="hint"></p>
+            </fieldset>
+
+            <!-- API -->
+            <fieldset class="type-fields" data-type="Api">
+              <div class="method-url">
+                <label>Method
+                  <select name="httpMethod">
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
+                    <option>HEAD</option>
+                    <option>OPTIONS</option>
+                  </select>
+                </label>
+                <label>Endpoint URL
+                  <input name="apiUrl" type="url" maxlength="2048" placeholder="https://api.example.com/v1/health">
+                </label>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label-row">
+                  <span class="field-label">Headers</span>
+                  <button id="add-header" class="btn btn-sm" type="button">+ Add header</button>
+                </div>
+                <div id="headers-list" class="headers-list"></div>
+                <p id="headers-empty" class="hint">No custom headers. Add one for API keys or auth tokens.</p>
+              </div>
+
+              <label id="body-field">Request body
+                <textarea name="requestBody" rows="5" maxlength="10000" placeholder='{"ping": true}' spellcheck="false"></textarea>
+                <span class="hint">Sent as application/json unless you set a Content-Type header.</span>
+              </label>
+
+              <div class="row">
+                <label>Expected HTTP status
+                  <input name="apiExpectedStatus" type="number" min="100" max="599" value="200">
+                </label>
+                <label id="keyword-field">Response must contain <span class="muted">(optional)</span>
+                  <input name="expectedBodyContains" maxlength="200" placeholder='"status":"ok"'>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="row">
+              <label>Check every (seconds)
+                <input name="intervalSeconds" type="number" min="30" value="60" required>
+              </label>
+              <label>Timeout (seconds)
+                <input name="timeoutSeconds" type="number" min="1" value="10" required>
+              </label>
+            </div>
+            <label class="checkbox">
+              <input name="isEnabled" type="checkbox" checked> Monitoring enabled
+            </label>
+
+            <div id="monitor-message" class="message" hidden></div>
+            <div class="form-actions">
+              <button id="monitor-submit" type="submit" class="btn btn-primary">Add monitor</button>
+              <a class="btn btn-ghost" href="#/dashboard">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Account -->
+    <section id="account-view" class="view" hidden>
+      <div class="page-header">
+        <div>
+          <h1>Account</h1>
+          <p class="muted">Signed in as <strong id="account-email"></strong>.</p>
+        </div>
+      </div>
+
+      <div class="card form-card form-card-narrow">
+        <h2>Change password</h2>
+        <p class="muted small">After the change, you stay signed in here and every other browser or device is signed out.</p>
+        <form id="password-form" novalidate>
+          <label>Current password
+            <input type="password" name="currentPassword" required autocomplete="current-password">
+          </label>
+          <label>New password
+            <input type="password" name="newPassword" required minlength="8" autocomplete="new-password">
+          </label>
+          <label>Confirm new password
+            <input type="password" name="confirmPassword" required minlength="8" autocomplete="new-password">
+          </label>
+          <p class="muted small">Use at least 8 characters.</p>
+          <div id="password-message" class="message" hidden></div>
+          <button id="password-submit" type="submit" class="btn btn-primary">Change password</button>
+        </form>
+      </div>
+
+      <div class="card form-card form-card-narrow">
+        <h2>Two-factor authentication</h2>
+        <p class="muted small">After your password, WatchTower asks for a one-time code, so a stolen password alone can't open your account.</p>
+        <div id="tfa-message" class="message" hidden></div>
+
+        <div id="tfa-off" class="tfa-panel" hidden>
+          <p><span class="tfa-badge">Off</span> Choose how you want to get codes:</p>
+          <div class="tfa-choices">
+            <button id="tfa-start-app" class="tfa-choice" type="button">
+              <strong>Authenticator app</strong>
+              <small>Google Authenticator, Microsoft Authenticator, 1Password and similar. Works without signal.</small>
+            </button>
+            <button id="tfa-start-email" class="tfa-choice" type="button">
+              <strong>Email code</strong>
+              <small>A 6-digit code is emailed to <span id="tfa-email-address"></span> each time you log in.</small>
+            </button>
+          </div>
+        </div>
+
+        <form id="tfa-app-form" class="tfa-panel" novalidate hidden>
+          <p><strong>1.</strong> Scan this QR code with your authenticator app.</p>
+          <img id="tfa-qr" class="tfa-qr" alt="QR code to add WatchTower to your authenticator app">
+          <p class="muted small">Can't scan it? Add an account manually with this key: <code id="tfa-key" class="tfa-key"></code></p>
+          <label><strong>2.</strong> Enter the 6-digit code the app shows
+            <input name="code" class="code-input" required autocomplete="one-time-code" inputmode="numeric" maxlength="7">
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Turn on</button>
+            <button type="button" class="btn btn-ghost" data-tfa-cancel>Cancel</button>
+          </div>
+        </form>
+
+        <form id="tfa-email-form" class="tfa-panel" novalidate hidden>
+          <p>We emailed a 6-digit code to <strong id="tfa-email-sent-to"></strong>. Enter it to confirm you receive our emails.</p>
+          <label>Code
+            <input name="code" class="code-input" required autocomplete="one-time-code" inputmode="numeric" maxlength="7">
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Turn on</button>
+            <button id="tfa-email-resend" type="button" class="btn">Send a new code</button>
+            <button type="button" class="btn btn-ghost" data-tfa-cancel>Cancel</button>
+          </div>
+        </form>
+
+        <div id="tfa-codes" class="tfa-panel" hidden>
+          <p><strong>Save your recovery codes.</strong> Each one logs you in once if you lose your phone or can't get the email. They won't be shown again.</p>
+          <ul id="tfa-codes-list" class="recovery-codes"></ul>
+          <div class="form-actions">
+            <button id="tfa-codes-copy" type="button" class="btn">Copy</button>
+            <button id="tfa-codes-download" type="button" class="btn">Download</button>
+            <button id="tfa-codes-done" type="button" class="btn btn-primary">I've saved them</button>
+          </div>
+        </div>
+
+        <form id="tfa-on" class="tfa-panel" novalidate hidden>
+          <p><span class="tfa-badge tfa-badge-on">On</span> <span id="tfa-on-text"></span></p>
+          <p id="tfa-codes-left" class="muted small"></p>
+          <label>Password <span class="muted">(needed to make changes)</span>
+            <input type="password" name="password" autocomplete="current-password">
+          </label>
+          <div class="form-actions">
+            <button id="tfa-regenerate" type="button" class="btn">New recovery codes</button>
+            <button id="tfa-disable" type="button" class="btn btn-danger">Turn off</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Incident report -->
+    <section id="incidents-view" class="view" hidden>
+      <div class="page-header">
+        <div>
+          <h1>Incident report</h1>
+          <p class="muted">Every outage WatchTower detected, and whether it has been resolved.</p>
+        </div>
+        <div class="filters">
+          <label>Period
+            <select id="incident-period">
+              <option value="1">Last 24 hours</option>
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="">All time</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="stats stats-5">
+        <div class="stat"><span class="stat-label">Incidents</span><span id="report-total" class="stat-value">0</span></div>
+        <div class="stat stat-down"><span class="stat-label">Open</span><span id="report-open" class="stat-value">0</span></div>
+        <div class="stat stat-up"><span class="stat-label">Resolved</span><span id="report-resolved" class="stat-value">0</span></div>
+        <div class="stat"><span class="stat-label">Avg. time to resolve</span><span id="report-mttr" class="stat-value">—</span></div>
+        <div class="stat"><span class="stat-label">Total downtime</span><span id="report-downtime" class="stat-value">0s</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>By monitor</h2>
+          <span class="muted small">Click a row to see only that monitor's incidents.</span>
+        </div>
+        <div id="by-monitor-empty" class="empty">No incidents in this period. Everything has stayed up.</div>
+        <div class="table-wrap">
+          <table id="by-monitor-table" class="table" hidden>
+            <thead>
+              <tr><th>Monitor</th><th>Current state</th><th>Incidents</th><th>Downtime</th><th>Last incident</th></tr>
+            </thead>
+            <tbody id="by-monitor-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Incidents</h2>
+          <div class="filters">
+            <select id="incident-status" aria-label="Status">
+              <option value="">All statuses</option>
+              <option value="open">Open</option>
+              <option value="resolved">Resolved</option>
+            </select>
+            <select id="incident-monitor" aria-label="Monitor">
+              <option value="">All monitors</option>
+            </select>
+          </div>
+        </div>
+        <div id="incidents-empty" class="empty">No incidents match these filters.</div>
+        <div class="table-wrap">
+          <table id="incidents-table" class="table" hidden>
+            <thead>
+              <tr><th>Status</th><th>Monitor</th><th>What happened</th><th>Started</th><th>Resolved</th><th>Duration</th></tr>
+            </thead>
+            <tbody id="incidents-body"></tbody>
+          </table>
+        </div>
+        <div id="incidents-pager" class="pager" hidden>
+          <button id="incidents-prev" class="btn btn-sm" type="button">Previous</button>
+          <span id="incidents-page" class="muted small"></span>
+          <button id="incidents-next" class="btn btn-sm" type="button">Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

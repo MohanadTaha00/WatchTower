@@ -1,0 +1,38 @@
+@WatchTower.Api_HostAddress = http://localhost:5073
+@token = paste-access-token-from-login
+
+GET {{WatchTower.Api_HostAddress}}/health/ready
+
+###
+
+POST {{WatchTower.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{ "email": "user@example.com", "password": "password123" }
+
+###
+
+POST {{WatchTower.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "user@example.com", "password": "password123" }
+
+###
+
+GET {{WatchTower.Api_HostAddress}}/api/monitors
+Authorization: Bearer {{token}}
+
+###
+
+POST {{WatchTower.Api_HostAddress}}/api/monitors
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Example", "url": "https://example.com", "intervalSeconds": 60, "timeoutSeconds": 10, "expectedStatusCode": 200 }
+
+###
+
+GET {{WatchTower.Api_HostAddress}}/api/incidents?status=open
+Authorization: Bearer {{token}}
+
+###

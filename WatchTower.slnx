@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="WatchTower.Api/WatchTower.Api.csproj" />
+  <Project Path="WatchTower.Application/WatchTower.Application.csproj" />
+  <Project Path="WatchTower.Domain/WatchTower.Domain.csproj" />
+  <Project Path="WatchTower.Infrastructure/WatchTower.Infrastructure.csproj" />
+  <Project Path="WatchTower.Tests/WatchTower.Tests.csproj" />
+</Solution>

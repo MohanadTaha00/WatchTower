@@ -1,0 +1,40 @@
+# Build output
+**/bin/
+**/obj/
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+*.trx
+coverage*/
+publish/
+
+# IDEs and editors
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+.DS_Store
+Thumbs.db
+
+# Secrets and local configuration (use `dotnet user-secrets` or environment variables instead)
+.env
+.env.*
+appsettings.*.local.json
+appsettings.Production.json
+secrets.json
+*.pfx
+*.p12
+*.pem
+*.key
+
+# Data Protection keys, if DataProtection:KeysPath points inside the repo
+DataProtection-Keys/
+keys/
+
+# Logs and local databases
+*.log
+logs/
+*.db
+*.sqlite
